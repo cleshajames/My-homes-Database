@@ -1,0 +1,287 @@
+++++++++++++++++++++++CREATE DATABASE SCRIPT FOR MY HOMES DATABASE+++++++++++++++++++++++++++++++++++
+
+#mysql -u root;
+
+CREATE Database myhomes1;
+
+================================================================================================================
+1) CREATE table for Supervisor
+
+
+CREATE TABLE supervisor (supervisor_id INT NOT NULL,
+supervisor_name VARCHAR(50),
+from_date DATE, 
+to_date DATE,
+PRIMARY KEY (supervisor_ID)
+);
+
+===============================================================================================================
+2) Create table for Sales Representative 
+
+CREATE TABLE sales_rep (
+salesrep_ID INT NOT NULL,
+salesrep_name VARCHAR(50),
+supervisor_ID INT,
+hire_date DATE,
+FOREIGN KEY (supervisor_ID) REFERENCES supervisor (supervisor_ID) ON DELETE CASCADE,
+PRIMARY KEY (salesrep_ID)
+);
+
+===============================================================================================================
+3) Create a table for Customer
+
+CREATE TABLE customer (
+customer_name VARCHAR(50),
+customer_ID INT NOT NULL,
+salesrep_ID INT,
+customer_email VARCHAR(50),
+FOREIGN KEY (salesrep_ID) REFERENCES sales_rep (salesrep_ID) ON DELETE CASCADE,
+PRIMARY KEY (customer_ID)
+);
+
+===============================================================================================================
+4) Create a table for Property
+
+CREATE TABLE property (
+property_ID INT NOT NULL,
+property_type VARCHAR(25),
+property_address VARCHAR(50),
+area_ID INT,
+salesrep_ID INT,
+healthandsafety VARCHAR(10),
+FOREIGN KEY (area_ID) REFERENCES area_sales (area_ID) ON DELETE CASCADE,
+FOREIGN KEY (salesrep_ID) REFERENCES sales_rep (salesrep_ID) ON DELETE CASCADE,
+PRIMARY KEY (property_ID)
+);
+
+
+===============================================================================================================
+5) Create a table for Area Sales
+
+CREATE TABLE area_sales (
+area_ID INT NOT NULL,
+area_name VARCHAR(50),
+sales_target INT,
+PRIMARY KEY (area_ID)
+);
+
+
+===============================================================================================================
+6) Create a table for Chief Sales Representative 
+
+CREATE TABLE chiefsales_rep (
+chiefsalesrep_ID INT NOT NULL,
+chiefsalesrep_name VARCHAR(50),
+area_ID INT,
+from_date DATE,
+to_date DATE,
+FOREIGN KEY (area_ID) REFERENCES area_sales (area_ID) ON DELETE CASCADE,
+PRIMARY KEY (chiefsalesrep_ID)
+);
+
+===============================================================================================================
+7) Create a table for Customer Prop 
+
+CREATE TABLE customer_prop (
+customer_ID INT,
+Property_ID INT,
+FOREIGN KEY (customer_ID) REFERENCES customer (customer_ID) ON DELETE CASCADE,
+FOREIGN KEY (property_ID) REFERENCES property (property_ID) ON DELETE CASCADE
+);
+
+===============================================================================================================
+++++++++++++++++++++++++++++++++++++INSERT INTO SCRIPT FOR MYHOMES DATABASE++++++++++++++++++++++++++++++++++++++++++++++
+
+1) Insert into Supervisors 
+
+INSERT INTO supervisor (supervisor_id, supervisor_name, from_date, to_date)
+VALUES
+    (1, 'John Smith', '2022-01-01', '2023-12-31'),
+    (2, 'Emily Johnson', '2022-03-15', '2023-10-31'),
+    (3, 'Michael Brown', '2022-02-01', '2023-11-30'),
+    (4, 'Olivia Davis', '2022-04-01', '2023-09-30'),
+    (5, 'James Garcia', '2022-01-15', '2023-12-15'),
+    (6, 'Sophia Williams', '2022-05-01', '2023-08-31');
+
+
+describe supervisor; 
+
+select * from supervisor; 
+================================================================================================================
+2) Insert into Sales Representative
+
+INSERT INTO sales_rep (salesrep_ID, salesrep_name, supervisor_ID, hire_date)
+VALUES
+    (1, 'Emma Johnson', 1, '2022-01-15'),
+    (2, 'Liam Smith', 1, '2022-02-01'),
+    (3, 'Olivia Davis', 2, '2022-03-15'),
+    (4, 'Noah Brown', 2, '2022-04-01'),
+    (5, 'Sophia Williams', 3, '2022-05-01'),
+    (6, 'Ethan Garcia', 3, '2022-06-15'),
+    (7, 'Ava Jones', 4, '2022-07-01'),
+    (8, 'William Martinez', 4, '2022-08-15'),
+    (9, 'Isabella Miller', 5, '2022-09-01'),
+    (10, 'James Smith', 5, '2022-10-15');
+
+DESCRIBE sales_rep; 
+
+SELECT * FROM sales_rep; 
+================================================================================================================
+3) Insert into Customer
+
+INSERT INTO customer (customer_name, customer_ID, salesrep_ID, customer_email)
+VALUES
+    ('Emily Davis', 1, 1, 'emily@example.com'),
+    ('Liam Johnson', 2, 2, 'liam@example.com'),
+    ('Olivia Smith', 3, 3, 'olivia@example.com'),
+    ('Noah Martinez', 4, 4, 'noah@example.com'),
+    ('Sophia Brown', 5, 5, 'sophia@example.com'),
+    ('Ethan Jones', 6, 6, 'ethan@example.com'),
+    ('Ava Garcia', 7, 7, 'ava@example.com'),
+    ('William Miller', 8, 8, 'william@example.com'),
+    ('Isabella Williams', 9, 9, 'isabella@example.com'),
+    ('James Davis', 10, 10, 'james@example.com'),
+    ('Emma Martinez', 11, 1, 'emma@example.com'),
+    ('Noah Smith', 12, 2, 'noah@example.com'),
+    ('Sophia Johnson', 13, 3, 'sophia@example.com'),
+    ('Ethan Davis', 14, 4, 'ethan@example.com'),
+    ('Olivia Martinez', 15, 5, 'olivia@example.com'),
+    ('Liam Brown', 16, 6, 'liam@example.com'),
+    ('Isabella Johnson', 17, 7, 'isabella@example.com'),
+    ('Ava Davis', 18, 8, 'ava@example.com'),
+    ('James Garcia', 19, 9, 'james@example.com'),
+    ('Emma Smith', 20, 10, 'emma@example.com');
+
+
+DESCRIBE customer; 
+
+SELECT * FROM customer; 
+================================================================================================================
+4) Insert into Property
+
+INSERT INTO property (property_ID, property_type, property_address, area_ID, salesrep_ID, healthandsafety)
+VALUES
+    (1, 'House', '123 Main St', 101, 1, 'Safe'),
+    (2, 'Apartment', '456 Elm St', 102, 2, 'Secure'),
+    (3, 'House', '789 Oak Ave', 103, 3, 'Safe'),
+    (4, 'Bungalow', '567 Maple Dr', 101, 4, 'Secure'),
+    (5, 'Apartment', '890 Pine Rd', 104, 5, 'Safe'),
+    (6, 'House', '345 Cedar Ln', 102, 6, 'Secure'),
+    (7, 'Bungalow', '234 Birch Rd', 103, 7, 'Safe'),
+    (8, 'Apartment', '678 Elm St', 101, 8, 'Secure'),
+    (9, 'House', '123 Oak Ave', 102, 9, 'Safe'),
+    (10, 'Apartment', '456 Maple Dr', 104, 10, 'Secure'),
+    (11, 'House', '789 Pine Rd', 103, 1, 'Safe'),
+    (12, 'Bungalow', '567 Cedar Ln', 101, 2, 'Secure'),
+    (13, 'House', '890 Birch Rd', 102, 3, 'Safe'),
+    (14, 'Apartment', '345 Elm St', 103, 4, 'Secure'),
+    (15, 'House', '234 Oak Ave', 101, 5, 'Safe'),
+    (16, 'Bungalow', '678 Maple Dr', 104, 6, 'Secure'),
+    (17, 'Apartment', '123 Pine Rd', 102, 7, 'Safe'),
+    (18, 'House', '456 Cedar Ln', 101, 8, 'Secure'),
+    (19, 'Bungalow', '789 Birch Rd', 103, 9, 'Safe'),
+    (20, 'House', '567 Elm St', 102, 10, 'Secure'),
+    (21, 'Apartment', '890 Oak Ave', 101, 1, 'Safe'),
+    (22, 'House', '345 Maple Dr', 104, 2, 'Secure'),
+    (23, 'Apartment', '234 Pine Rd', 103, 3, 'Safe'),
+    (24, 'House', '678 Cedar Ln', 101, 4, 'Secure'),
+    (25, 'Bungalow', '123 Birch Rd', 102, 5, 'Safe');
+
+
+DESCRIBE property; 
+
+SELECT * FROM property;
+================================================================================================================
+5) Insert into Area Sales
+
+INSERT INTO area_sales (area_ID, area_name, sales_target)
+VALUES
+    (101, 'Kensington', 1),
+    (102, 'Brixton', 2),
+    (103, 'Shoreditch', 3),
+    (104, 'Notting Hill', 4),
+    (105, 'Camden Town', 5),
+    (106, 'City of Westminster', 6),
+    (107, 'Greenwich', 7);
+
+DESCRIBE area_sales; 
+
+SELECT * FROM area_sales;
+================================================================================================================
+6) Insert into Cheif Sales Representative
+
+INSERT INTO chiefsales_rep (chiefsalesrep_ID, chiefsalesrep_name, area_ID, from_date, to_date)
+VALUES
+    (1, 'Michael Johnson', 101, '2023-07-01', '2024-06-30'),
+    (2, 'Sophia Williams', 102, '2023-08-15', '2024-07-31'),
+    (3, 'William Brown', 103, '2023-06-01', '2024-05-31'),
+    (4, 'Olivia Davis', 104, '2023-09-01', '2024-08-31'),
+    (5, 'James Garcia', 105, '2023-08-01', '2024-07-31'),
+    (6, 'Emma Smith', 106, '2023-07-15', '2024-06-30');
+
+
+DESCRIBE chief_sales_rep; 
+
+SELECT * FROM chief_sales_rep;
+
+===============================================================================================================
+7) Create a table for Customer Prop 
+
+INSERT INTO customer_prop (customer_ID, property_ID)
+VALUES
+    (1, 2),
+    (2, 5),
+    (3, 8),
+    (4, 11),
+    (5, 14),
+    (6, 17),
+    (7, 20),
+    (8, 23),
+    (9, 25),
+    (10, 1),
+    (11, 3),
+    (12, 6),
+    (13, 9),
+    (14, 12),
+    (15, 15);
+
+=======================================================================================================================
++++++++++++++++++++++++++++++++++++++++++++++++++++++Queries+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+1) Display name of representatives, details of the property they represent, and name their supervisors.
+
+SELECT
+    sr.salesrep_name AS Representative_Name,
+    p.property_id AS Property_ID,
+    p.property_type AS Property_Type,
+    p.property_address AS Property_Address,
+    sup.supervisor_name AS Supervisor_Name
+FROM
+    Sales_rep sr
+INNER JOIN
+    Property p ON sr.salesrep_id = p.salesrep_id
+INNER JOIN
+    Supervisor sup ON sr.supervisor_id = sup.supervisor_id;
+
+
+==========================================================================================================================
+
+2) Display details of customers together with details of their area and name of the managers of their areas. 
+
+SELECT
+  customer.customer_name,
+  customer.customer_ID,
+  customer.salesrep_ID,
+  customer.customer_email,
+  property.area_id,
+  area_sales.area_name,
+  chiefsales_rep.chiefsalesrep_name
+FROM customer
+INNER JOIN customer_prop ON customer.customer_ID = customer_prop.customer_ID
+INNER JOIN property ON customer_prop.property_ID = property.property_id
+INNER JOIN area_sales ON property.area_id = area_sales.area_id
+INNER JOIN chiefsales_rep ON area_sales.area_id = chiefsales_rep.area_id;
+
+
+
+

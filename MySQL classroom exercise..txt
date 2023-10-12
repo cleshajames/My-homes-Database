@@ -1,0 +1,317 @@
+MY SQL EXERCISE
+
+
+1) Write a query to display all 
+details of an employee along with 
+salary of the second highest paid employee.
+
+***
+WITH cte AS(
+SELECT e.*, MAX(s.salary) AS max_sal, 
+RANK() OVER(ORDER BY max_sal DESC) as sal_rank
+FROM employees e
+INNER JOIN salaries s ON s.emp_no = e.emp_no
+GROUP BY e.emp_no)
+
+SELECT * FROM cte
+LIMIT 5;
+-----------------------------------------
+***
+WITH cte AS(
+ SELECT e.*, s.salary
+ FROM employees e
+ INNER JOIN salaries s ON s.emp_no = e.emp_no
+)
+
+SELECT * FROM(
+	SELECT *, 
+	DENSE_RANK() OVER(ORDER BY salary DESC) AS sal_rnk
+	FROM cte
+) AS sq
+WHERE sq.sal_rnk = 2;
+=================================================================================================================================
+2) Write a query to display the average salary,
+ max salary and min salary by title, 
+ round to nearest whole number and 
+ order by ascending order.
+ 
+***
+ SELECT MAX(s.salary) AS max_sal, 
+ MIN(s.salary) AS min_sal, 
+ FLOOR(AVG(s.salary)) AS avg_sal, t.titles
+ FROM salaries s
+ INNER JOIN employees e ON e.emp_no = s.emp_no
+ INNER JOIN titles t ON t.emp_no = e.emp_no
+ GROUP BY t.titles
+ ORDER BY avg_sal ASC, max_sal ASC, min_sal ASC;
+===================================================================================================================================
+3) Write a query to 
+display all the employees that do not 
+contain vowels in their full name and 
+display the department they work in along
+with title.
+
+SELECT e.first_name, e.last_name, d.dept_name, t.titles
+FROM employees e
+INNER JOIN dept_emp de ON de.emp_no = e.emp_no
+INNER JOIN titles t ON t.emp_no = e.emp_no
+INNER JOIN departments d ON d.dept_no = de.dept_no
+WHERE ((first_name NOT LIKE "%a%")AND
+(first_name NOT LIKE "%e%") AND
+(first_name NOT LIKE "%i%") AND
+(first_name NOT LIKE "%o%") AND
+(first_name NOT LIKE "%u%") AND 
+(last_name NOT LIKE "%a%") AND
+(last_name NOT LIKE "%e%") AND
+(last_name NOT LIKE "%i%") AND
+(last_name NOT LIKE "%o%") AND
+(last_name NOT LIKE "%u%"));
+
+----------------------------------
+***
+SELECT e.first_name, e.last_name, d.dept_name, t.titles
+FROM employees e
+INNER JOIN dept_emp de ON de.emp_no = e.emp_no
+INNER JOIN titles t ON t.emp_no = e.emp_no
+INNER JOIN departments d ON d.dept_no = de.dept_no
+WHERE
+CONCAT(e.first_name, e.last_name) NOT LIKE "%a%" AND
+CONCAT(e.first_name, e.last_name) NOT LIKE "%e%" AND
+CONCAT(e.first_name, e.last_name) NOT LIKE "%i%" AND
+CONCAT(e.first_name, e.last_name) NOT LIKE "%o%" AND
+CONCAT(e.first_name, e.last_name) NOT LIKE "%u%"; 
+=====================================================================================================================
+4) Write a query to display all the 
+employees that have worked in 2 or more 
+departments. 
+Show all their details and departments 
+they work in.
+
+***
+SELECT e.*, 
+GROUP_CONCAT(d.dept_name) AS depts,
+COUNT(d.dept_name) AS num_depts
+FROM employees e
+INNER JOIN dept_emp de ON de.emp_no = e.emp_no
+INNER JOIN departments d ON d.dept_no = de.dept_no
+GROUP BY e.emp_no
+HAVING num_depts > 1;
+
+---------------------------------------------
+WITH emp_more_dept AS (
+	SELECT emp_no, COUNT(dept_no)
+	FROM dept_emp
+	GROUP BY emp_no
+	HAVING COUNT(dept_no) >= 2
+)
+SELECT e.*, d.dept_name, de.from_date, de.to_date
+FROM emp_more_dept emd
+INNER JOIN employees e ON e.emp_no = emd.emp_no
+INNER JOIN dept_emp de ON de.emp_no = e.emp_no
+INNER JOIN departments d ON d.dept_no = de.dept_no
+ORDER BY e.emp_no
+LIMIT 50;
+---------------------------------------------------
+WITH cte AS(
+	SELECT e.*, d.dept_name, 
+	COUNT(d.dept_name) OVER(PARTITION BY e.emp_no) AS cnt
+	FROM employees e
+	INNER JOIN dept_emp de ON de.emp_no = e.emp_no
+	INNER JOIN departments d ON d.dept_no = de.dept_no
+	
+)
+
+SELECT * FROM cte 
+WHERE cnt >= 2
+LIMIT 50;
+
+5) Write a query to display the month and year 
+when most employees were hired along with 
+total number of hires.
+
+SELECT e.hire_date, SUM(e.gender)
+FROM employees e
+INNER JOIN dept_emp de ON de.emp_no = e.emp_no
+INNER JOIN departments d ON d.dept_no = de.dept_no;
+------------------------------------------
+
+WITH tbl_1 AS
+(SELECT DISTINCT YEAR(hire_date) AS year, 
+MONTH(hire_date) AS month, 
+COUNT(emp_no) OVER (PARTITION BY MONTH(hire_date), 
+YEAR(hire_date)) AS total_number_hire FROM employees)
+SELECT *
+FROM tbl_1
+WHERE (year, month, total_number_hire) = 
+(SELECT year, month, MAX(total_number_hire) AS maximum_hire
+FROM tbl_1 
+GROUP BY year, month 
+ORDER BY maximum_hire DESC 
+LIMIT 1);
+-------------------------------------------------
+***
+WITH cte AS (
+	SELECT DATE_FORMAT(hire_date, "%Y-%M") AS hire_yr_mnt,
+	COUNT(hire_date) AS cnt
+	FROM employees
+	GROUP BY hire_yr_mnt
+)
+SELECT * FROM (
+	SELECT *,
+	DENSE_RANK() OVER(ORDER BY cnt DESC) AS rnk
+	FROM cte
+) sq
+WHERE sq.rnk = 1;
+----------------------------
+create temporary table hire_ranks(
+    (select hire_month_year, 
+	count(emp_no) as total_hires,
+    dense_rank() over (order by total_hires desc) as hire_rank
+    from
+    (select emp_no, concat(month(hire_date), '-', year(hire_date)) as hire_month_year
+    from employees) as temp_table
+    group by hire_month_year));
+ 
+select hire_month_year, total_hires from hire_ranks
+where hire_rank = 1;
+=============================================================================================================================
+6) Write a query to display the month and year 
+when second highest number of employees were 
+hired along with total number of hires.
+
+***
+WITH cte AS (
+	SELECT DATE_FORMAT(hire_date, "%Y-%M") AS hire_yr_mnt,
+	COUNT(hire_date) AS cnt
+	FROM employees
+	GROUP BY hire_yr_mnt
+)
+SELECT * FROM (
+	SELECT *,
+	DENSE_RANK() OVER(ORDER BY cnt DESC) AS rnk
+	FROM cte
+) sq
+WHERE sq.rnk = 2;
+-----------------------------------------------
+create temporary table hire_ranks(
+    (select hire_month_year, 
+	count(emp_no) as total_hires,
+    dense_rank() over (order by total_hires desc) as hire_rank
+    from
+    (select emp_no, concat(month(hire_date), '-', year(hire_date)) as hire_month_year
+    from employees) as temp_table
+    group by hire_month_year));
+ 
+select hire_month_year, total_hires from hire_ranks
+where hire_rank = 2;
+==================================================================================================================
+7)Write a query to display the sum of Male (M) 
+and Female (F) employees and order the 
+result in descending order.
+
+SELECT DISTINCT(gender), 
+COUNT(emp_no) OVER(PARTITION BY gender) AS total_emp
+FROM employees
+GROUP BY gender,emp_no
+ORDER BY total_emp DESC;
+-------------------------------------------
+***
+SELECT gender, COUNT(*) AS ttl_cnt
+FROM employees
+GROUP BY gender
+ORDER BY ttl_cnt DESC;
+
+-------------------------------------------
+
+SELECT SUM(CASE WHEN gender = 'M' THEN 1 ELSE 0 END) AS 'male_count',
+SUM(CASE WHEN gender = 'F' THEN 1 ELSE 0 END) AS 'female_count'
+FROM employees;
+==================================================================================================================
+8) Write a query to display details of 
+youngest employee in each department 
+along with their age.
+
+WITH cte AS(
+	SELECT e.*, TIMESTAMPDIFF(YEAR, e.birth_date,current_date()) AS age,
+	d.dept_name AS department
+	FROM employees e
+	INNER JOIN dept_emp de ON de.emp_no = e.emp_no
+	INNER JOIN departments d ON d.dept_no = de.dept_no
+)
+SELECT * FROM(
+	SELECT *,
+	ROW_NUMBER() OVER(PARTITION BY department ORDER BY age ASC) as rn
+	FROM cte
+) sq
+WHERE sq.rn = 1;
+
+-----------------------------------------------
+***
+SELECT e.*, d.dept_name,
+MIN(TIMESTAMPDIFF(YEAR, e.birth_date,e.hire_date)) AS age
+FROM employees e
+INNER JOIN dept_emp de ON de.emp_no = e.emp_no
+INNER JOIN departments d ON d.dept_no = de.dept_no
+GROUP BY d.dept_name;
+
+=================================================================================================================================
+9) Write a query to display number of 
+male and female employees in each department.
+
+***
+SELECT d.dept_name,
+SUM(CASE WHEN gender = 'M' THEN 1 ELSE 0 END) AS 'male_count',
+SUM(CASE WHEN gender = 'F' THEN 1 ELSE 0 END) AS 'female_count'	
+FROM departments d
+INNER JOIN 
+	(SELECT dept_no, emp_no, to_date
+	FROM dept_emp
+	GROUP BY emp_no
+	HAVING COUNT(emp_no) >= 1) AS t1 ON t1.dept_no = d.dept_no
+INNER JOIN employees e ON e.emp_no = t1.emp_no
+GROUP BY d.dept_name;
+
+10)Write a query to create a view on query 9 and 
+read data and delete the view.
+
+CREATE VIEW q9 AS
+SELECT d.dept_name,
+SUM(CASE WHEN gender = 'M' THEN 1 ELSE 0 END) AS 'male_count',
+SUM(CASE WHEN gender = 'F' THEN 1 ELSE 0 END) AS 'female_count'	
+FROM departments d
+INNER JOIN 
+	(SELECT dept_no, emp_no
+	FROM dept_emp
+	GROUP BY emp_no
+	HAVING COUNT(emp_no) >= 1) AS t1 ON t1.dept_no = d.dept_no
+INNER JOIN employees e ON e.emp_no = t1.emp_no
+GROUP BY d.dept_name;
+
+SELECT * FROM q9;
+
+DROP VIEW q9;
+-------------------------------------------------------------------------------------------------
+11) Write a query to create a stored procedure on query 9.
+
+DELIMITER $$
+	CREATE PROCEDURE q9()
+		BEGIN
+			SELECT d.dept_name,
+			SUM(CASE WHEN gender = 'M' THEN 1 ELSE 0 END) AS 'male_count',
+			SUM(CASE WHEN gender = 'F' THEN 1 ELSE 0 END) AS 'female_count'	
+			FROM departments d
+			INNER JOIN 
+				(SELECT dept_no, emp_no
+				FROM dept_emp
+				GROUP BY emp_no
+				HAVING COUNT(emp_no) >= 1) AS t1 ON t1.dept_no = d.dept_no
+			INNER JOIN employees e ON e.emp_no = t1.emp_no
+			GROUP BY d.dept_name;
+		END $$
+DELIMITER;
+
+SHOW PROCEDURE STATUS WHERE db="employee_info";
+
+DROP PROCEDURE IF EXISTS q9;
+
+
